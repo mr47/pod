@@ -26,7 +26,7 @@ var pod
 // setup ----------------------------------------------------------------------
 
 before(function (done) {
-    if (process.platform === 'darwin' || process.platform === "win32") {
+    if (process.platform === 'darwin') {
         // kill the pm2 daemon first.
         // the daemon would malfunction if the Mac went to sleep mode.
         exec('./node_modules/pm2/bin/pm2 kill', function (err) {
@@ -428,18 +428,22 @@ describe('git push', function () {
     before(function (done) {
         app = pod.getAppInfo('test2')
         git = 'git' +
-            ' -C ' + app.workPath + '/.git';
-
+            ' --git-dir=' + app.workPath + '/.git'
+            + ' --work-tree=' + app.workPath;
+        console.log("#######################");
+        console.log(git);
         // add custom hook
-        fs.writeFileSync(app.workPath + '/.podhook', podhookStub)
+        fs.writeFileSync(app.workPath + '/.podhook', podhookStub);
 
         // modify git post-receive hook for test
         var hookPath = app.repoPath + '/hooks/post-receive',
             hook = fs.readFileSync(hookPath, 'utf-8').replace(/^pod\s/g, 'POD_CONF=' + testConfPath + ' pod ')
         fs.writeFileSync(hookPath, hook)
-
+        console.log("#######################");
+        console.log(git + ' add ' + app.workPath + ' && ' +
+            git + ' commit -m \'test\'');
         exec(
-            git + ' add ' + app.workPath + '; ' +
+            git + ' add ' + app.workPath + ' && ' +
             git + ' commit -m \'test\'',
             done
         )
@@ -478,10 +482,10 @@ describe('git push', function () {
         function modifyHook () {
             // modify hook in a different copy of the repo
             // and push it.
-            fs.writeFileSync(clonePath + '/.podhook', 'touch testfile2; exit 1')
+            fs.writeFileSync(clonePath + '/.podhook', 'touch testfile2 && exit 1')
             exec(
-                cloneGit + ' add ' + clonePath + '; ' +
-                cloneGit + ' commit -m \'test2\'; ' +
+                cloneGit + ' add ' + clonePath + ' && ' +
+                cloneGit + ' commit -m \'test2\' && ' +
                 cloneGit + ' push origin master',
                 function (err) {
                     if (err) return done(err)
