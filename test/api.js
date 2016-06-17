@@ -1,19 +1,20 @@
-var assert  = require('assert'),
-    fs      = require('fs'),
-    path    = require('path'),
-    http    = require('http'),
-    exec    = require('child_process').exec,
-    request = require('request')
+var assert          = require('assert'),
+    fs              = require('fs'),
+    path            = require('path'),
+    http            = require('http'),
+    exec            = require('child_process').exec,
+    request         = require('request'),
+    pathNormalize   = require('./../lib/win')
 
-var temp         = path.resolve(__dirname, '../temp'),
-    root         = temp + '/root',
-    appsDir      = root + '/apps',
-    reposDir     = root + '/repos',
-    testConfPath = temp + '/.podrc',
-    testConf     = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podrc'), 'utf-8'),
-    stubScript   = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
-    podhookStub  = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podhook'), 'utf-8'),
-    testPort     = process.env.PORT || 18080
+var temp          = path.resolve(__dirname, '../temp'),
+    root          = temp + '/root',
+    appsDir       = root + '/apps',
+    reposDir      = root + '/repos',
+    testConfPath  = temp + '/.podrc',
+    testConf      = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podrc'), 'utf-8'),
+    stubScript    = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
+    podhookStub   = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podhook'), 'utf-8'), 
+    testPort      = process.env.PORT || 18080
 
 process.env.POD_CONF = testConfPath
 process.on('exit', function () {
@@ -427,8 +428,7 @@ describe('git push', function () {
     before(function (done) {
         app = pod.getAppInfo('test2')
         git = 'git' +
-            ' --git-dir=' + app.workPath + '/.git' +
-            ' --work-tree=' + app.workPath
+            ' -C ' + app.workPath + '/.git';
 
         // add custom hook
         fs.writeFileSync(app.workPath + '/.podhook', podhookStub)
