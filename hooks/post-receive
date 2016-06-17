@@ -22,6 +22,15 @@ if [ -f .podhook ]; then
 elif [ -f package.json ]; then
 	npm install
 fi
+# does we have pod ? or does we have nvm ?
+if which pod &>/dev/null; then
+    pod stop {{app}}
+    pod start {{app}}
+else
+    echo "Do you have installed pod?"
+    echo "OK, let try another way..."
+    POD_PATH = $(npm bin)
 
-pod stop {{app}}
-pod start {{app}}
+    $POD_PATH/pod stop {{app}}
+    $POD_PATH/pod start {{app}}
+fi

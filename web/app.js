@@ -5,6 +5,7 @@ var http     = require('http'),
     express  = require('express'),
     pod      = require('../lib/api'),
     ghURL    = require('parse-github-url'),
+    pathNormalize = require('../lib/win'),
     app      = express()
 
 // late def, wait until pod is ready
@@ -166,9 +167,9 @@ function executeHook (appid, app, payload, cb) {
     }
     setTimeout(respond, 3000)
 
-    fs.readFile(path.resolve(__dirname, '../hooks/post-receive'), 'utf-8', function (err, template) {
+    fs.readFile(pathNormalize(path.resolve(__dirname, '../hooks/post-receive')), 'utf-8', function (err, template) {
         if (err) return respond(err)
-        var hookPath = conf.root + '/temphook.sh',
+        var hookPath = pathNormalize(conf.root + '/temphook.sh'),
             hook = template
                 .replace(/\{\{pod_dir\}\}/g, conf.root)
                 .replace(/\{\{app\}\}/g, appid)

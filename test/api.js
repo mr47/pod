@@ -14,7 +14,7 @@ var temp          = pathNormalize(path.resolve(__dirname, '../temp')),
     testConf      = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podrc'), 'utf-8'),
     stubScript    = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
     podhookStub   = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podhook'), 'utf-8'), 
-    testPort      = process.env.PORT || 18080
+    testPort      = process.env.PORT || 19080
 
 process.env.POD_CONF = testConfPath
 process.on('exit', function () {
@@ -430,18 +430,13 @@ describe('git push', function () {
         git = 'git' +
             ' --git-dir=' + app.workPath + '/.git'
             + ' --work-tree=' + app.workPath;
-        console.log("#######################");
-        console.log(git);
         // add custom hook
-        fs.writeFileSync(app.workPath + '/.podhook', podhookStub);
+        fs.writeFileSync(pathNormalize(app.workPath + '/.podhook'), podhookStub)
 
         // modify git post-receive hook for test
-        var hookPath = app.repoPath + '/hooks/post-receive',
+        var hookPath = pathNormalize(app.repoPath + '/hooks/post-receive'),
             hook = fs.readFileSync(hookPath, 'utf-8').replace(/^pod\s/g, 'POD_CONF=' + testConfPath + ' pod ')
         fs.writeFileSync(hookPath, hook)
-        console.log("#######################");
-        console.log(git + ' add ' + app.workPath + ' && ' +
-            git + ' commit -m \'test\'');
         exec(
             git + ' add ' + app.workPath + ' && ' +
             git + ' commit -m \'test\'',
@@ -580,9 +575,9 @@ describe('web interface', function () {
 
 describe('remote app', function () {
 
-    var repoPath = temp + '/remote-test.git',
-        workPath = temp + '/remote-test',
-        appPath  = appsDir + '/remote-test',
+    var repoPath = pathNormalize(temp + '/remote-test.git'),
+        workPath = pathNormalize(temp + '/remote-test'),
+        appPath  = pathNormalize(appsDir + '/remote-test'),
         port = testPort + 2,
         git = 'git --git-dir=' + workPath + '/.git --work-tree=' + workPath
 
@@ -605,8 +600,8 @@ describe('remote app', function () {
             assert.ok(msg[2].indexOf(repoPath) > 0)
             assert.ok(fs.existsSync(appPath))
             exec(
-                git + ' add app.js; ' +
-                git + ' commit -m "test"; ' +
+                git + ' add app.js && ' +
+                git + ' commit -m "test" && ' +
                 git + ' push origin master',
                 done
             )
@@ -631,7 +626,7 @@ describe('remote app', function () {
             setTimeout(function () {
                 assert.ok(!fs.existsSync(appPath + '/app.js'))
                 done()
-            }, 300)
+            }, 1000)
         })
     })
 
@@ -653,7 +648,7 @@ describe('remote app', function () {
             setTimeout(function () {
                 assert.ok(!fs.existsSync(appPath + '/app.js'))
                 done()
-            }, 300)
+            }, 1000)
         })
     })
 
@@ -675,7 +670,7 @@ describe('remote app', function () {
             setTimeout(function () {
                 assert.ok(!fs.existsSync(appPath + '/app.js'))
                 done()
-            }, 300)
+            }, 1000)
         })
     })
 
@@ -695,9 +690,9 @@ describe('remote app', function () {
         }, function (err) {
             if (err) return done(err)
             setTimeout(function () {
-                assert.ok(fs.existsSync(appPath + '/app.js'))
-                expectWorkingPort(port, done, { delay: 1000 })
-            }, 300)
+                assert.ok(fs.existsSync(pathNormalize(appPath + '/app.js')))
+                expectWorkingPort(port, done, { delay: 2000 })
+            }, 2000)
         })
     })
 
@@ -762,7 +757,7 @@ function expectRestart (port, beforeRestartStamp, done) {
             assert.ok(restartStamp > beforeRestartStamp)
             done()
         })
-    }, 300)
+    }, 2000)
 }
 
 function expectWorkingPort (port, done, options) {
@@ -779,13 +774,13 @@ function expectWorkingPort (port, done, options) {
             }
             done()
         })
-    }, options.delay || 300) // small interval to make sure it has finished
+    }, options.delay || 1000) // small interval to make sure it has finished
 }
 
 function expectBadPort (port, done) {
     request({
         url: 'http://localhost:' + port,
-        timeout: 500
+        timeout: 2000
     }, function (err, res, body) {
         if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') {
             return done()
