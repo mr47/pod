@@ -6,11 +6,11 @@ var assert          = require('assert'),
     request         = require('request'),
     pathNormalize   = require('./../lib/win')
 
-var temp          = path.resolve(__dirname, '../temp'),
-    root          = temp + '/root',
-    appsDir       = root + '/apps',
-    reposDir      = root + '/repos',
-    testConfPath  = temp + '/.podrc',
+var temp          = pathNormalize(path.resolve(__dirname, '../temp')),
+    root          = pathNormalize(temp + '/root'),
+    appsDir       = pathNormalize(root + '/apps'),
+    reposDir      = pathNormalize(root + '/repos'),
+    testConfPath  = pathNormalize(temp + '/.podrc'),
     testConf      = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podrc'), 'utf-8'),
     stubScript    = fs.readFileSync(path.resolve(__dirname, 'fixtures/app.js'), 'utf-8'),
     podhookStub   = fs.readFileSync(path.resolve(__dirname, 'fixtures/.podhook'), 'utf-8'), 
@@ -26,7 +26,7 @@ var pod
 // setup ----------------------------------------------------------------------
 
 before(function (done) {
-    if (process.platform === 'darwin') {
+    if (process.platform === 'darwin' || process.platform === "win32") {
         // kill the pm2 daemon first.
         // the daemon would malfunction if the Mac went to sleep mode.
         exec('./node_modules/pm2/bin/pm2 kill', function (err) {
